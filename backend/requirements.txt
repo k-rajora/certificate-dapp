@@ -1,0 +1,7 @@
+qrcode
+pillow
+Flask
+flask-cors
+reportlab
+web3
+python-dotenv

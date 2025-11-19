@@ -1,0 +1,63 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+#frontend
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.DS_Store
+
+# React cache
+frontend/.eslintcache
+
+#backend(flask)
+backend/__pycache__/
+backend/myvenv/
+backend/*.pyc
+backend/.env
+backend/generated/
+backend/instance/
+backend/.DS_Store
+
+# Certificates or PDFs created
+backend/generated/*.pdf
+
+#hardhat
+# Hardhat / Smart Contract
+# -----------------------------
+smart-contract/node_modules/
+smart-contract/artifacts/
+smart-contract/cache/
+smart-contract/typechain/
+smart-contract/env/
+smart-contract/.env
+smart-contract/.DS_Store
+
+# Ignore deployment output
+smart-contract/deployments/
+
+
+#general files
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+myvenv/
+env/
+venv/
+
+
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+
+dist/
+tmp/
+temp/

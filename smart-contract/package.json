@@ -1,0 +1,13 @@
+{
+    "name": "certificate-dapp",
+    "version": "1.0.0",
+    "scripts": {
+      "test": "npx hardhat test",
+      "compile": "npx hardhat compile",
+      "deploy": "node scripts/deploy.js"
+    },
+    "dependencies": {
+      "@nomicfoundation/hardhat-toolbox": "^4.0.0"
+    }
+  }
+  
