@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-RPC = os.getenv("SEPOLIA_RPC")
+RPC = os.getenv("AMOY_RPC")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 CONTRACT_ADDRESS = os.getenv("CONTRACT_ADDRESS")
 
