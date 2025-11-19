@@ -1,6 +1,7 @@
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 import qrcode
+from io import BytesIO
 from reportlab.lib.utils import ImageReader
 
 def generate_certificate(name, course, grade, date, certificate_id, output_file):
@@ -22,12 +23,16 @@ def generate_certificate(name, course, grade, date, certificate_id, output_file)
     c.drawString(80, 590, f"Grade: {grade}")
     c.drawString(80, 560, f"Date: {date}")
 
-    # Generate QR Code (auto verification link)
+    # Generate QR Code
     qr_url = f"https://example.com/verify/{certificate_id}"
     qr = qrcode.make(qr_url)
-    qr_img = ImageReader(qr)
 
-    # Draw QR code in the bottom-right
+    qr_bytes = BytesIO()
+    qr.save(qr_bytes, format="PNG")
+    qr_bytes.seek(0)
+
+    qr_img = ImageReader(qr_bytes)
+
     c.drawImage(qr_img, 420, 500, width=150, height=150)
 
     c.save()
