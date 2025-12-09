@@ -17,7 +17,7 @@ spec:
       containers:
       - name: frontend
         
-        image: $ECR_REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
+        image: $REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
         ports:
         - containerPort: 80 
         resources:
