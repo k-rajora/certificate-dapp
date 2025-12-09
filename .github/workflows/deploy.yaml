@@ -46,6 +46,12 @@ jobs:
           cd backend
           docker build -t $REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG .
           docker push $REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG
+      
+      - name: 🔍 Debug File Structure
+        run: |
+          echo "Current Directory: $(pwd)"
+          echo "Listing all files in the repo:"
+          ls -R
 
       - name: Deploy Backend to EKS
         env:
