@@ -4,7 +4,7 @@ import qrcode
 from io import BytesIO
 from reportlab.lib.utils import ImageReader
 
-def generate_certificate(name, course, grade, date, certificate_id, output_file):
+def generate_certificate(name, course, grade, date, certificate_id, output_file, base_url):
     c = canvas.Canvas(output_file, pagesize=A4)
 
     # Title
@@ -23,8 +23,9 @@ def generate_certificate(name, course, grade, date, certificate_id, output_file)
     c.drawString(80, 590, f"Grade: {grade}")
     c.drawString(80, 560, f"Date: {date}")
 
-    # Generate QR Code
-    qr_url = f"https://example.com/verify/{certificate_id}"
+    # Generate QR Code using the dynamic Base URL
+    # This ensures the QR code points to your Load Balancer in production
+    qr_url = f"{base_url}/verify/{certificate_id}"
     qr = qrcode.make(qr_url)
 
     qr_bytes = BytesIO()

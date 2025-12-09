@@ -5,3 +5,4 @@ flask-cors
 reportlab
 web3
 python-dotenv
+gunicorn
