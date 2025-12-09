@@ -12,11 +12,13 @@ export default function Verify() {
   }, [cid]);
 
   const verifyCert = async (id) => {
+    
     const res = await fetch(`${API_URL}/verify/${id}`);
+    
     const data = await res.json();
     setResult(data);
   };
-
+  
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4 text-gray-700">Verify Certificate</h2>
