@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        # This variable is replaced by envsubst in deploy.yml
+        image: $REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG
+        ports:
+        - containerPort: 5000
+        env:
+        # --- SECRETS (Injected from GitHub) ---
+        - name: PRIVATE_KEY
+          value: "$PRIVATE_KEY"
+        - name: CONTRACT_ADDRESS
+          value: "$CONTRACT_ADDRESS"
+        - name: AMOY_RPC
+          value: "$AMOY_RPC"
+          
+        # --- CONFIGURATION (Safe to hardcode) ---
+        - name: FLASK_DEBUG
+          value: "False"  # Always False in production!
+        - name: BASE_URL
+          # This helps your PDF generator know its own public address
+          # Ideally, you update this to your actual DNS name later (e.g., api.example.com)
+          value: "http://backend-service" 
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
