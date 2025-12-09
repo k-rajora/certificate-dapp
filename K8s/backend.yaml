@@ -37,8 +37,11 @@ spec:
           # Ideally, you update this to your actual DNS name later (e.g., api.example.com)
           value: "http://backend-service" 
         resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
           limits:
-            memory: "512Mi"
+            memory: "256Mi"
             cpu: "500m"
 ---
 apiVersion: v1
