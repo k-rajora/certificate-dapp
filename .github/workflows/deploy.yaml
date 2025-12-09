@@ -1,0 +1,109 @@
+name: Deploy to EKS
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: ap-south-1                   # Matches your terraform.tf
+  ECR_BACKEND_REPO: dapp-backend           # Matches your ecr.tf
+  ECR_FRONTEND_REPO: dapp-frontend         # Matches your ecr.tf
+  EKS_CLUSTER_NAME: dapp-cluster           # Matches your eks.tf
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # --- 1. SETUP AWS & KUBERNETES ---
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Update Kubeconfig
+        run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      # --- 2. BACKEND: BUILD & DEPLOY ---
+      - name: Build & Push Backend
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd backend
+          docker build -t $REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG .
+          docker push $REGISTRY/$ECR_BACKEND_REPO:$IMAGE_TAG
+
+      - name: Deploy Backend to EKS
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          # INJECT SECRETS ONLY
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          CONTRACT_ADDRESS: ${{ secrets.CONTRACT_ADDRESS }}
+          AMOY_RPC: ${{ secrets.AMOY_RPC }}
+        run: |
+          # Use envsubst to replace $VARS in the yaml with actual values
+          envsubst < .k8s/backend.yaml | kubectl apply -f -
+
+      # --- 3. THE "WAIT" TRICK ---
+      - name: Wait for Backend LoadBalancer IP
+        id: get-lb-url
+        run: |
+          echo "Waiting for Backend LoadBalancer to be provisioned..."
+          # Loop until the hostname is available (timeout after 5 mins)
+          for i in {1..30}; do
+            LB_HOSTNAME=$(kubectl get svc backend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+            if [ -n "$LB_HOSTNAME" ]; then
+              echo "Backend LB found: $LB_HOSTNAME"
+              echo "BACKEND_URL=http://$LB_HOSTNAME" >> $GITHUB_ENV
+              break
+            fi
+            echo "Waiting for AWS to assign URL... ($i/30)"
+            sleep 10
+          done
+          
+          if [ -z "$LB_HOSTNAME" ]; then
+            echo "Error: Timed out waiting for LoadBalancer URL."
+            exit 1
+          fi
+
+      # --- 4. FRONTEND: BUILD (WITH URL) & DEPLOY ---
+      - name: Build & Push Frontend
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd frontend
+          # Here we inject the URL we just captured from AWS
+          docker build \
+            --build-arg REACT_APP_API_URL=${{ env.BACKEND_URL }} \
+            -t $REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG .
+          docker push $REGISTRY/$ECR_FRONTEND_REPO:$IMAGE_TAG
+
+      - name: Deploy Frontend to EKS
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          envsubst < .k8s/frontend.yaml | kubectl apply -f -
+          
+      - name: Post-Deployment Summary
+        run: |
+          echo "🚀 Deployment Complete!"
+          echo "Backend API: ${{ env.BACKEND_URL }}"
+          FRONTEND_LB=$(kubectl get svc frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "Frontend App: http://$FRONTEND_LB (might take a minute to propagate)"
