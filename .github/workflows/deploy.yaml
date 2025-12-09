@@ -57,7 +57,7 @@ jobs:
           AMOY_RPC: ${{ secrets.AMOY_RPC }}
         run: |
           # Use envsubst to replace $VARS in the yaml with actual values
-          envsubst < .k8s/backend.yaml | kubectl apply -f -
+          envsubst < .K8s/backend.yaml | kubectl apply -f -
 
       # --- 3. THE "WAIT" TRICK ---
       - name: Wait for Backend LoadBalancer IP
@@ -99,7 +99,7 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          envsubst < .k8s/frontend.yaml | kubectl apply -f -
+          envsubst < .K8s/frontend.yaml | kubectl apply -f -
           
       - name: Post-Deployment Summary
         run: |
