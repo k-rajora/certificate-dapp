@@ -35,7 +35,7 @@ spec:
         - name: BASE_URL
           # This helps your PDF generator know its own public address
           # Ideally, you update this to your actual DNS name later (e.g., api.example.com)
-          value: " af666d1b950f840b1b428ce342ecb72c-317105906.ap-south-1.elb.amazonaws.com" 
+          value: "http://af666d1b950f840b1b428ce342ecb72c-317105906.ap-south-1.elb.amazonaws.com" 
         resources:
           requests:
             memory: "64Mi"
